@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "noEmit": false
+  },
+  "references": [{ "path": "../../packages/audit-core" }],
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/playwright:v1.52.0-noble
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV AUDIT_DATA_DIR=/var/data
+ENV DATABASE_URL=file:/var/data/audits.sqlite
+
+COPY package.json package-lock.json tsconfig.json vitest.config.ts ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY packages/audit-core/package.json packages/audit-core/package.json
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+RUN npm prune --omit=dev
+
+EXPOSE 3001
+
+CMD ["npm", "start"]

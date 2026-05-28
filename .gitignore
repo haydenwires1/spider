@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-types
+data
+.env
+.DS_Store
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+*.d.ts
+apps/web/vite.config.js
