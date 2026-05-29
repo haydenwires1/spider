@@ -136,6 +136,15 @@ async function extractFromPage(page: Page, url: string, statusCode: number, cont
     })()`);
 }
 
+async function captureScreenshot(page: Page, filePath: string): Promise<string | undefined> {
+  try {
+    await page.screenshot({ path: filePath, fullPage: true, timeout: 15_000, animations: "disabled" });
+    return filePath;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function renderAndExtractPage(
   browser: Browser,
   url: string,
@@ -143,23 +152,34 @@ export async function renderAndExtractPage(
   screenshotsDir: string
 ): Promise<RenderResult> {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
-  const { statusCode, contentType } = await preparePage(page, url);
-  const extracted = await extractFromPage(page, url, statusCode, contentType);
   const slug = slugForUrl(url);
+  let statusCode: number;
+  let contentType: string;
+  let extracted: PageExtract & { links: string[] };
   let desktopScreenshotPath: string | undefined;
-  if (settings.screenshotDesktop) {
-    desktopScreenshotPath = path.join(screenshotsDir, `${slug}-desktop.png`);
-    await page.screenshot({ path: desktopScreenshotPath, fullPage: true });
+  try {
+    const prepared = await preparePage(page, url);
+    statusCode = prepared.statusCode;
+    contentType = prepared.contentType;
+    extracted = await extractFromPage(page, url, statusCode, contentType);
+    if (settings.screenshotDesktop) {
+      desktopScreenshotPath = await captureScreenshot(page, path.join(screenshotsDir, `${slug}-desktop.png`));
+    }
+  } finally {
+    await page.close();
   }
-  await page.close();
 
   let mobileScreenshotPath: string | undefined;
   if (settings.screenshotMobile) {
     const mobilePage = await browser.newPage({ ...devices["iPhone 14"] });
-    await preparePage(mobilePage, url);
-    mobileScreenshotPath = path.join(screenshotsDir, `${slug}-mobile.png`);
-    await mobilePage.screenshot({ path: mobileScreenshotPath, fullPage: true });
-    await mobilePage.close();
+    try {
+      await preparePage(mobilePage, url);
+      mobileScreenshotPath = await captureScreenshot(mobilePage, path.join(screenshotsDir, `${slug}-mobile.png`));
+    } catch {
+      mobileScreenshotPath = undefined;
+    } finally {
+      await mobilePage.close();
+    }
   }
 
   const extract: PageExtract = {
