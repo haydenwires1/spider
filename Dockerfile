@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/playwright:v1.52.0-noble
 
 WORKDIR /app
 
-ENV NODE_ENV=production
 ENV AUDIT_DATA_DIR=/var/data
 ENV DATABASE_URL=file:/var/data/audits.sqlite
 
@@ -17,6 +16,8 @@ COPY . .
 
 RUN npm run build
 RUN npm prune --omit=dev
+
+ENV NODE_ENV=production
 
 EXPOSE 3001
 
