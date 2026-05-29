@@ -5,6 +5,10 @@ WORKDIR /app
 ENV AUDIT_DATA_DIR=/var/data
 ENV DATABASE_URL=file:/var/data/audits.sqlite
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends build-essential \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json tsconfig.json vitest.config.ts ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
